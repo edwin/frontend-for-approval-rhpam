@@ -38,3 +38,8 @@ A simple approval system frontend for displaying how integration between fronten
 ```
 https://github.com/edwin/rhpam-simple-approval-concept
 ```
+
+## Blog
+```
+https://edwin.baculsoft.com/2020/08/a-simple-rhpam-application-integration-with-multi-user-approval-workflow/
+```
