@@ -14,6 +14,8 @@ func main() {
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/welcome", welcome)
 	http.HandleFunc("/save", save)
+	http.HandleFunc("/get-list-processes", getListProcess)
+	http.HandleFunc("/get-process-progress", getProcessProgress)
 	http.HandleFunc("/get-list-approvals", getListApprovals)
 	http.HandleFunc("/get-approval", getApproval)
 	http.HandleFunc("/approve", doApproving)
@@ -32,7 +34,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 	redirectTarget := "/"
 
-	if (username == "adminUser" || username == "spv01") && password == "password" {
+	if (username == "adminUser" || username == "spv02") && password == "password" {
 		setSession(username, password, w)
 		redirectTarget = fmt.Sprintf("/welcome?%d", int32(time.Now().Unix()))
 	}
@@ -70,7 +72,7 @@ func welcome(w http.ResponseWriter, r *http.Request) {
 	if strings.Contains(sessionToken, "adminUser") {
 		http.ServeFile(w, r, "./static/entry.html")
 		return
-	} else if strings.Contains(sessionToken, "spv01") {
+	} else if strings.Contains(sessionToken, "spv02") {
 		http.ServeFile(w, r, "./static/approval.html")
 		return
 	}
@@ -122,6 +124,69 @@ func save(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stdout, "response from pam : ", string(body))
 
 	http.ServeFile(w, r, "./static/success.html")
+}
+
+func getListProcess(w http.ResponseWriter, r *http.Request) {
+	// get username and password
+	value := getUsernameAndPassword(w, r)
+
+	request, _ := http.NewRequest("GET", "http://"+value+"@localhost:8080/kie-server/services/rest/server/queries/processes/instances?initiator=adminUser&page=0&pageSize=20&sortOrder=true&status=1&status=2&status=3", nil)
+
+	// set request header
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Accept", "application/json")
+
+	// set header response
+	w.Header().Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(request)
+
+	if err != nil {
+		fmt.Println(err)
+		fmt.Fprint(w, "{\"message\":\"fail\"}")
+		return
+	}
+
+	defer resp.Body.Close()
+
+	// get response from pam
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	fmt.Fprint(w, string(body))
+	return
+}
+
+func getProcessProgress(w http.ResponseWriter, r *http.Request) {
+	// get username and password
+	value := getUsernameAndPassword(w, r)
+
+	// get process id
+	id := r.URL.Query()["id"][0]
+	request, _ := http.NewRequest("GET", "http://"+value+"@localhost:8080/kie-server/services/rest/server/containers/approval_system_1.0.1-SNAPSHOT/images/processes/instances/"+id, nil)
+
+	// set request header
+	request.Header.Set("Accept", "application/svg+xml")
+
+	// set header response
+	w.Header().Set("Content-Type", "application/svg+xml")
+
+	client := &http.Client{}
+	resp, err := client.Do(request)
+
+	if err != nil {
+		fmt.Println(err)
+		fmt.Fprint(w, "{\"message\":\"fail\"}")
+		return
+	}
+
+	defer resp.Body.Close()
+
+	// get response from pam
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	fmt.Fprint(w, string(body))
+	return
 }
 
 func getListApprovals(w http.ResponseWriter, r *http.Request) {

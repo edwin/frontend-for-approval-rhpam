@@ -13,6 +13,25 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.0/css/bootstrapValidator.min.css">
 </head>
 <body>
+<div class="modal fade">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title">Progress</h4>
+            </div>
+            <div class="modal-body">
+                <svg id="svg-image" height="400px" width="800px"
+                        xmlns="http://www.w3.org/2000/svg"
+                        xmlns:xlink="http://www.w3.org/1999/xlink"
+                        xmlns:ev="http://www.w3.org/2001/xml-events">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="container" style="margin-top: 25px;">
     <form class="well form-horizontal" id="leave_form" action="save" method="post">
         <fieldset>
@@ -20,7 +39,6 @@
             <legend>
                 <center><h2><b>Entry Leave Form</b></h2></center>
             </legend>
-            <br>
 
             <div class="form-group">
                 <label class="col-md-5 control-label">Leave ID</label>
@@ -58,6 +76,31 @@
                 </div>
             </div>
         </fieldset>
+
+        <br />
+        <br />
+
+        <fieldset>
+            <legend>
+                <center><h2><b>List Leave Requests</b></h2></center>
+            </legend>
+
+            <table class="table" id="table">
+                <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Leave ID</th>
+                    <th scope="col">Transaction Date</th>
+                    <th scope="col">Status</th>
+                    <th scope="col"></th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+
+        </fieldset>
+
     </form>
 </div>
 </div>
@@ -67,6 +110,41 @@
 <script id="INLINE_PEN_JS_ID">
     $(document).ready(function () {
         $("#id").val(Math.random().toString(36).slice(2));
+
+        $.get(
+            "get-list-processes",
+            function(data) {
+                $.each(data['process-instance'], function(index, value){
+                    $("#table > tbody:last-child").append(
+                        "<tr>" +
+                            "<td>"+value["process-instance-id"]+"</td>" +
+                            "<td>"+value["correlation-key"]+"</td>" +
+                            "<td>"+new Date(value["start-date"]["java.util.Date"]).toLocaleString('en-GB')+"</td>" +
+                            "<td>"+((value["process-instance-state"]===1)?'Active':'Completed')+"</td>" +
+                            "<td>" +
+                            "   <button type=\"button\" processId=\""+value["process-instance-id"]+"\" class=\"btn btn-info detail\"> Detail <span class=\"glyphicon glyphicon-cog\"></span> </button>"+
+                            "</td>" +
+                        "</tr>");
+                });
+            }
+        );
+
+        $(document).on("click",".detail",function() {
+            $('.modal').modal('show');
+
+            $.ajax(
+                {
+                    url : "get-process-progress?id="+$(this).attr("processId"),
+                    dataType: 'html',
+                    type: 'GET',
+                    success: function(data)
+                    {
+                        console.log(data);
+                        $("#svg-image").append(data);
+                    }
+                }
+            );
+        });
     });
 </script>
 </body>

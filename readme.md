@@ -18,6 +18,11 @@ A simple approval system frontend for displaying how integration between fronten
 
 ----
 
+#### Progress
+![image](image/display.png)
+
+----
+
 #### Approval
 ![image](image/approval01.png)
 ----
@@ -25,9 +30,8 @@ A simple approval system frontend for displaying how integration between fronten
 
 ----
 
-#### Workflow
+#### RHPAM Workflow
 ![image](image/workflow.png)
-
 ----
 
 ## Backend
